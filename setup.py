@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="peoplenet_torch",
-    version="0.0.2",
+    version="0.0.4",
     description="A Python package that allows you to run NVIDIA's PeopleNet using PyTorch",
     author="Kanat Alimanov",
     author_email="7l21@pm.me",
