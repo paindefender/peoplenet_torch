@@ -11,6 +11,11 @@ from onnx2torch import convert
 
 class PeopleNet:
     def __init__(self, device=None) -> None:
+        """Initialize a PeopleNet model
+
+        Args:
+            device (str, optional): specify the pytorch device.
+        """
         if device is None:
             if torch.cuda.is_available():
                 device = "cuda"
@@ -47,7 +52,18 @@ class PeopleNet:
 
         self.people_boxes = torch.empty((4, 34, 60)).to(device)
 
-    def __call__(self, input, conf=0.5, nms_threshold=0.7, verbose=True) -> Any:
+    def __call__(self, input, conf=0.5, nms_threshold=0.7, verbose=True) -> list:
+        """_summary_
+
+        Args:
+            input (matrix): a uint8 960x544 image
+            conf (float, optional): minimum confidence for a valid bounding box. Defaults to 0.5.
+            nms_threshold (float, optional): threshold for the non-max suppression algorithm. Defaults to 0.7.
+            verbose (bool, optional): show more detail. Defaults to True.
+
+        Returns:
+            list: people's bounding boxes
+        """
         prepre = time.time()
         input = self.preprocess(input)
         postpre = time.time()
