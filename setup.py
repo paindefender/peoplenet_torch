@@ -6,6 +6,7 @@ setup(
     description="A Python package that allows you to run NVIDIA's PeopleNet using PyTorch",
     author="Kanat Alimanov",
     author_email="7l21@pm.me",
+    url="https://github.com/paindefender/peoplenet_torch",
     packages=["peoplenet_torch"],
     install_requires=[
         "onnx",
