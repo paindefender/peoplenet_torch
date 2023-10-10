@@ -52,13 +52,16 @@ class PeopleNet:
 
         self.people_boxes = torch.empty((4, 34, 60)).to(device)
 
-    def __call__(self, input, conf=0.5, nms_threshold=0.7, verbose=True) -> list:
+    def __call__(
+        self, input, conf=0.5, nms_threshold=0.7, xywh=False, verbose=True
+    ) -> list:
         """_summary_
 
         Args:
             input (matrix): a uint8 960x544 image
             conf (float, optional): minimum confidence for a valid bounding box. Defaults to 0.5.
             nms_threshold (float, optional): threshold for the non-max suppression algorithm. Defaults to 0.7.
+            xywh (bool, optional): return boxes in xywh format, by default they're xyxy. Defaults to False.
             verbose (bool, optional): show more detail. Defaults to True.
 
         Returns:
@@ -74,7 +77,7 @@ class PeopleNet:
             postinf = time.time()
 
             prepost = time.time()
-            detections = self.postprocess(confs, boxes, conf, nms_threshold)
+            detections = self.postprocess(confs, boxes, conf, nms_threshold, xywh)
             postpost = time.time()
 
         if verbose:
@@ -90,14 +93,24 @@ class PeopleNet:
         )
         return input
 
-    def postprocess(self, confs, boxes, conf, nms_threshold):
+    def postprocess(self, confs, boxes, conf, nms_threshold, xywh):
         boxes_ppl = boxes[0][:4]
         confs_ppl = confs[0][0].reshape(-1)
         self.people_boxes[:2] = (boxes_ppl[:2] - self.centers) * (-self.box_norm)
         self.people_boxes[2:] = (boxes_ppl[2:] + self.centers) * self.box_norm
-        ppl_box_flat = self.people_boxes.permute((1, 2, 0)).reshape(-1, 4)
-        boxes_nmsed = torchvision.ops.nms(ppl_box_flat, confs_ppl, nms_threshold)
-        confidence_filter = torch.zeros((2040,), dtype=torch.bool).to(self.device)
-        confidence_filter[boxes_nmsed] = True
-        confidence_filter &= confs_ppl > conf
-        return ppl_box_flat[confidence_filter].int().cpu().numpy()
+        ppl_box_flat = self.people_boxes.permute((1, 2, 0)).reshape(-1, 4)[
+            confs_ppl > conf
+        ]
+        boxes_nmsed = torchvision.ops.nms(
+            ppl_box_flat, confs_ppl[confs_ppl > conf], nms_threshold
+        )
+        result = ppl_box_flat[boxes_nmsed]
+        if xywh:
+            xywh_result = torch.empty_like(result)
+            xywh_result[:, 0] = (result[:, 0] + result[:, 2]) / 2
+            xywh_result[:, 1] = (result[:, 1] + result[:, 3]) / 2
+            xywh_result[:, 2] = result[:, 2] - result[:, 0]
+            xywh_result[:, 3] = result[:, 3] - result[:, 1]
+            return xywh_result.int().cpu().numpy()
+        else:
+            return result.int().cpu().numpy()
