@@ -12,3 +12,7 @@ from peoplenet_torch import PeopleNet
 model = PeopleNet()
 boxes = model(image)
 ```
+
+## star history
+
+[![Star History Chart](https://api.star-history.com/svg?repos=paindefender/peoplenet_torch&type=Date)](https://star-history.com/#paindefender/peoplenet_torch&Date)
